@@ -18,7 +18,6 @@ export const Navbar = async ({ locale }: NavbarProps) => {
     { href: `/${locale}`, label: t("home") },
     { href: `/${locale}/product`, label: t("product") },
     { href: `/${locale}/how-it-works`, label: t("howItWorks") },
-    { href: `/${locale}/pricing`, label: t("pricing") },
     { href: `/${locale}/reviews`, label: t("reviews") },
     { href: `/${locale}/b2b`, label: t("b2b") },
     { href: `/${locale}/contact`, label: t("contact") },
