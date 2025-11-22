@@ -12,17 +12,36 @@ type VideoPlayerProps = {
 export const VideoPlayer = ({ locale }: VideoPlayerProps) => {
   const videoRef = useRef<HTMLVideoElement>(null);
   const [scrollProgress, setScrollProgress] = useState(0);
+  const [isMobile, setIsMobile] = useState(false);
   const leftText = "maymunlara bak";
-  const rightText = "s2mle100lesh";
+  const rightText = "akşama içtima var";
   const centerText = "kutay nasıl olmuş knk";
   const totalScrollRef = useRef(0);
   const lastTouchYRef = useRef(0);
   const MAX_SCROLL = 1500; // Total scroll needed to reach center (in pixels) - desktop
   const MAX_SCROLL_MOBILE = 600; // Total scroll needed to reach center (in pixels) - mobile (faster)
 
+  // Detect mobile on mount and resize
+  useEffect(() => {
+    const checkMobile = () => {
+      setIsMobile(window.innerWidth < 768);
+    };
+    
+    checkMobile();
+    window.addEventListener("resize", checkMobile);
+    
+    return () => {
+      window.removeEventListener("resize", checkMobile);
+    };
+  }, []);
+
   useEffect(() => {
     const video = videoRef.current;
     if (!video) return;
+
+    // Set video source based on device type
+    const source = isMobile ? "/monkey_mobile.mp4" : "/monkey.mp4";
+    video.src = source;
 
     // Prevent body scroll
     document.body.style.overflow = "hidden";
@@ -36,6 +55,10 @@ export const VideoPlayer = ({ locale }: VideoPlayerProps) => {
       e.preventDefault();
       e.stopPropagation();
       
+      // Detect mobile for scroll calculation
+      const currentIsMobile = window.innerWidth < 768;
+      const maxScroll = currentIsMobile ? MAX_SCROLL_MOBILE : MAX_SCROLL;
+      
       // Track scroll direction: positive deltaY = scroll down, negative = scroll up
       const scrollDelta = e.deltaY;
       
@@ -44,7 +67,7 @@ export const VideoPlayer = ({ locale }: VideoPlayerProps) => {
         // Scroll down - move texts toward center
         totalScrollRef.current = Math.min(
           totalScrollRef.current + Math.abs(scrollDelta),
-          MAX_SCROLL
+          maxScroll
         );
       } else {
         // Scroll up - move texts away from center
@@ -55,7 +78,7 @@ export const VideoPlayer = ({ locale }: VideoPlayerProps) => {
       }
       
       // Calculate progress (0 to 1)
-      const progress = totalScrollRef.current / MAX_SCROLL;
+      const progress = totalScrollRef.current / maxScroll;
       setScrollProgress(progress);
     };
 
@@ -75,8 +98,7 @@ export const VideoPlayer = ({ locale }: VideoPlayerProps) => {
       const touchDelta = currentY - lastTouchYRef.current;
       lastTouchYRef.current = currentY;
       
-      // Detect mobile (screen width < 768px)
-      const isMobile = window.innerWidth < 768;
+      // Use state-based mobile detection
       const maxScroll = isMobile ? MAX_SCROLL_MOBILE : MAX_SCROLL;
       // Increase scroll sensitivity on mobile (multiply by 2.5x)
       const scrollMultiplier = isMobile ? 2.5 : 1;
@@ -122,7 +144,7 @@ export const VideoPlayer = ({ locale }: VideoPlayerProps) => {
       document.body.style.overflow = "";
       document.documentElement.style.overflow = "";
     };
-  }, []);
+  }, [isMobile]);
 
   // Calculate video opacity based on scroll progress
   // When scrollProgress is 0, opacity is 0.8 (80%)
@@ -162,7 +184,7 @@ export const VideoPlayer = ({ locale }: VideoPlayerProps) => {
 
       <video
         ref={videoRef}
-        className="h-screen w-full object-cover transition-opacity duration-500"
+        className="h-screen w-full object-fill md:object-cover transition-opacity duration-500"
         style={{ opacity: videoOpacity }}
         autoPlay
         loop
@@ -172,7 +194,6 @@ export const VideoPlayer = ({ locale }: VideoPlayerProps) => {
         controlsList="nodownload nofullscreen noremoteplayback"
         disablePictureInPicture
       >
-        <source src="/monkey.mp4" type="video/mp4" />
         Tarayıcınız video oynatmayı desteklemiyor.
       </video>
       
