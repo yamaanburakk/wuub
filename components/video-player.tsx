@@ -74,15 +74,18 @@ export const VideoPlayer = ({ locale }: VideoPlayerProps) => {
       const touchDelta = currentY - lastTouchYRef.current;
       lastTouchYRef.current = currentY;
       
-      // Track touch scroll direction: positive = scroll down, negative = scroll up
-      if (touchDelta > 0) {
-        // Scroll down - move texts toward center
+      // Track touch scroll direction: 
+      // touchDelta > 0 means finger moved down (scroll down - content moves up)
+      // touchDelta < 0 means finger moved up (scroll up - content moves down)
+      // For mobile: when user swipes down (scroll down), texts should appear
+      if (touchDelta < 0) {
+        // Scroll down (finger moved up, content scrolls down) - move texts toward center
         totalScrollRef.current = Math.min(
           totalScrollRef.current + Math.abs(touchDelta),
           MAX_SCROLL
         );
       } else {
-        // Scroll up - move texts away from center
+        // Scroll up (finger moved down, content scrolls up) - move texts away from center
         totalScrollRef.current = Math.max(
           totalScrollRef.current - Math.abs(touchDelta),
           0
@@ -152,7 +155,7 @@ export const VideoPlayer = ({ locale }: VideoPlayerProps) => {
 
       <video
         ref={videoRef}
-        className="h-full w-full object-cover transition-opacity duration-500"
+        className="h-full w-full object-contain transition-opacity duration-500 md:object-cover"
         style={{ opacity: videoOpacity }}
         autoPlay
         loop
