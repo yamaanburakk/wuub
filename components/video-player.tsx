@@ -17,7 +17,8 @@ export const VideoPlayer = ({ locale }: VideoPlayerProps) => {
   const centerText = "kutay nasıl olmuş knk";
   const totalScrollRef = useRef(0);
   const lastTouchYRef = useRef(0);
-  const MAX_SCROLL = 1500; // Total scroll needed to reach center (in pixels)
+  const MAX_SCROLL = 1500; // Total scroll needed to reach center (in pixels) - desktop
+  const MAX_SCROLL_MOBILE = 600; // Total scroll needed to reach center (in pixels) - mobile (faster)
 
   useEffect(() => {
     const video = videoRef.current;
@@ -74,6 +75,12 @@ export const VideoPlayer = ({ locale }: VideoPlayerProps) => {
       const touchDelta = currentY - lastTouchYRef.current;
       lastTouchYRef.current = currentY;
       
+      // Detect mobile (screen width < 768px)
+      const isMobile = window.innerWidth < 768;
+      const maxScroll = isMobile ? MAX_SCROLL_MOBILE : MAX_SCROLL;
+      // Increase scroll sensitivity on mobile (multiply by 2.5x)
+      const scrollMultiplier = isMobile ? 2.5 : 1;
+      
       // Track touch scroll direction: 
       // touchDelta > 0 means finger moved down (scroll down - content moves up)
       // touchDelta < 0 means finger moved up (scroll up - content moves down)
@@ -81,19 +88,19 @@ export const VideoPlayer = ({ locale }: VideoPlayerProps) => {
       if (touchDelta < 0) {
         // Scroll down (finger moved up, content scrolls down) - move texts toward center
         totalScrollRef.current = Math.min(
-          totalScrollRef.current + Math.abs(touchDelta),
-          MAX_SCROLL
+          totalScrollRef.current + Math.abs(touchDelta) * scrollMultiplier,
+          maxScroll
         );
       } else {
         // Scroll up (finger moved down, content scrolls up) - move texts away from center
         totalScrollRef.current = Math.max(
-          totalScrollRef.current - Math.abs(touchDelta),
+          totalScrollRef.current - Math.abs(touchDelta) * scrollMultiplier,
           0
         );
       }
       
       // Calculate progress (0 to 1)
-      const progress = totalScrollRef.current / MAX_SCROLL;
+      const progress = totalScrollRef.current / maxScroll;
       setScrollProgress(progress);
     };
 
@@ -155,7 +162,7 @@ export const VideoPlayer = ({ locale }: VideoPlayerProps) => {
 
       <video
         ref={videoRef}
-        className="h-full w-full object-contain transition-opacity duration-500 md:object-cover"
+        className="h-screen w-full object-cover transition-opacity duration-500"
         style={{ opacity: videoOpacity }}
         autoPlay
         loop
